@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Download, Archive, RotateCcw } from 'lucide-react'
+import { Download, Archive, RotateCcw, PenLine, Sparkles } from 'lucide-react'
 import { StyleSelector } from '../components/creator/StyleSelector'
 import { ColorSelector } from '../components/creator/ColorSelector'
 import { StickerDisplay } from '../components/creator/StickerDisplay'
@@ -135,40 +135,111 @@ export function CreatorPage() {
             )}
 
             {/* Prompt */}
-            <div>
-              <p className="font-mono text-xs tracking-widest mb-2" style={{ color: 'var(--color-muted)' }}>// DESCRIBE STICKER</p>
-              <div className="relative">
-                <textarea value={prompt} onChange={e => setPrompt(e.target.value)} rows={4}
-                  placeholder="e.g. a skull wearing headphones, dripping chrome..."
-                  className="w-full px-4 pt-4 pb-12 font-body font-semibold text-base outline-none resize-y transition-all leading-relaxed"
-                  style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-ink)' }}
-                  onFocus={e => e.currentTarget.style.borderColor = '#dc2626'}
-                  onBlur={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
-                  onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generate() }}
-                />
-                <div className="absolute bottom-3 left-3 flex gap-1.5 flex-wrap">
-                  {QUICK_TAGS.map(tag => (
-                    <button key={tag} onClick={() => setPrompt(p => p ? `${p}, ${tag}` : tag)}
-                      className="font-mono text-xs px-2 py-0.5 uppercase tracking-wide transition-all"
-                      style={{ background: 'var(--color-surface2)', border: '1px solid var(--color-border)', color: 'var(--color-muted)' }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#dc2626'; e.currentTarget.style.color = '#dc2626' }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-muted)' }}>
-                      {tag}
-                    </button>
-                  ))}
+            <div
+              className="rounded-2xl p-px shadow-sm"
+              style={{
+                background: 'linear-gradient(135deg, rgba(52, 211, 153, 0.35) 0%, rgba(255, 255, 255, 0.9) 42%, rgba(125, 211, 252, 0.4) 100%)',
+              }}
+            >
+              <div
+                className="rounded-2xl px-4 pt-4 pb-3"
+                style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 253, 250, 0.5) 100%)' }}
+              >
+                <div className="flex gap-3 mb-3">
+                  <div
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-md"
+                    style={{ background: 'linear-gradient(145deg, #34d399 0%, #38bdf8 100%)' }}
+                  >
+                    <PenLine className="text-white" size={20} strokeWidth={2.25} />
+                  </div>
+                  <div className="min-w-0 pt-0.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-display text-2xl tracking-wide leading-none" style={{ color: 'var(--color-ink)' }}>
+                        Your idea
+                      </h3>
+                      <Sparkles size={16} className="text-emerald-500 shrink-0" aria-hidden />
+                    </div>
+                    <p className="font-body text-sm mt-1.5 leading-snug" style={{ color: 'var(--color-muted2)' }}>
+                      Describe a character, creature, or vibe — cute, loud, or totally odd. When you’re ready, use ⌘ or Ctrl + Enter to generate.
+                    </p>
+                  </div>
+                </div>
+                <div className="relative">
+                  <textarea
+                    value={prompt}
+                    onChange={e => setPrompt(e.target.value)}
+                    rows={4}
+                    placeholder="Example: a grinning toaster with sunglasses, thick outlines, lots of personality…"
+                    className="w-full px-4 pt-3.5 pb-12 font-body font-semibold text-base outline-none resize-y transition-all leading-relaxed rounded-xl border-2"
+                    style={{
+                      background: '#fff',
+                      borderColor: 'rgba(167, 243, 208, 0.65)',
+                      color: 'var(--color-ink)',
+                    }}
+                    onFocus={e => {
+                      e.currentTarget.style.borderColor = 'rgba(52, 211, 153, 0.65)'
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(52, 211, 153, 0.15)'
+                    }}
+                    onBlur={e => {
+                      e.currentTarget.style.borderColor = 'rgba(167, 243, 208, 0.65)'
+                      e.currentTarget.style.boxShadow = 'none'
+                    }}
+                    onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generate() }}
+                  />
+                  <div className="absolute bottom-3 left-3 flex gap-1.5 flex-wrap max-w-[calc(100%-1.5rem)]">
+                    {QUICK_TAGS.map(tag => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setPrompt(p => (p ? `${p}, ${tag}` : tag))}
+                        className="font-mono text-[11px] px-2.5 py-1 rounded-full uppercase tracking-wide transition-all border shadow-sm"
+                        style={{
+                          background: 'linear-gradient(180deg, #fff, rgba(236, 253, 245, 0.9))',
+                          borderColor: 'rgba(52, 211, 153, 0.25)',
+                          color: 'var(--color-muted)',
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.55)'
+                          e.currentTarget.style.color = '#0d9488'
+                          e.currentTarget.style.background = 'linear-gradient(180deg, #fff, rgba(224, 242, 254, 0.85))'
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.borderColor = 'rgba(52, 211, 153, 0.25)'
+                          e.currentTarget.style.color = 'var(--color-muted)'
+                          e.currentTarget.style.background = 'linear-gradient(180deg, #fff, rgba(236, 253, 245, 0.9))'
+                        }}
+                      >
+                        + {tag}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Style */}
             <div>
-              <p className="font-mono text-xs tracking-widest mb-2" style={{ color: 'var(--color-muted)' }}>// MODE</p>
+              <div className="mb-2">
+                <p className="font-display text-xl tracking-wide" style={{ color: 'var(--color-ink)' }}>
+                  Look &amp; feel
+                </p>
+                <p className="font-body text-sm mt-0.5" style={{ color: 'var(--color-muted2)' }}>
+                  Nine styles — pick the energy that fits your idea.
+                </p>
+              </div>
               <StyleSelector selected={style} onChange={setStyle} />
             </div>
 
             {/* Color */}
             <div>
-              <p className="font-mono text-xs tracking-widest mb-2" style={{ color: 'var(--color-muted)' }}>// PALETTE</p>
+              <div className="mb-2">
+                <p className="font-display text-xl tracking-wide" style={{ color: 'var(--color-ink)' }}>
+                  Color mood
+                </p>
+                <p className="font-body text-sm mt-0.5" style={{ color: 'var(--color-muted2)' }}>
+                  Swatches hint at the palette; your prompt still leads the way.
+                </p>
+              </div>
               <ColorSelector selected={color} onChange={setColor} />
             </div>
 

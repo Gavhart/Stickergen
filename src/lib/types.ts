@@ -61,7 +61,7 @@ export const COLOR_OPTIONS: ColorOption[] = [
   { id: 'gold',      label: 'GOLD',      prompt: 'aged gold and bronze tones, dark dramatic shadows' },
 ]
 
-export const QUICK_TAGS = ['skull', 'fire', 'wolf', 'blade', 'serpent', 'lightning', 'demon', 'void']
+export const QUICK_TAGS = ['cosmic', 'retro', 'sparkles', 'chill', 'bold', 'stars', 'coffee', 'waves']
 
 export const POLLINATIONS_MODELS: Partial<Record<StickerStyle, string>> = {
   grunge: 'flux-realism', metal: 'flux-realism', tattoo: 'flux-realism',
