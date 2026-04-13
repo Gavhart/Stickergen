@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
-import { Download, Archive, RotateCcw, PenLine, Sparkles } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Download, Archive, RotateCcw, PenLine, Sparkles, ImagePlus, X } from 'lucide-react'
 import { StyleSelector } from '../components/creator/StyleSelector'
 import { ColorSelector } from '../components/creator/ColorSelector'
 import { StickerDisplay } from '../components/creator/StickerDisplay'
@@ -14,6 +14,13 @@ import { AuthModal } from '../components/auth/AuthModal'
 
 const LOADING_MSGS = ['Rendering...', 'Processing...', 'Compiling...', 'Executing...', 'Synthesizing...']
 
+interface UploadedImage {
+  base64: string
+  mimeType: string
+  previewUrl: string
+  fileName: string
+}
+
 export function CreatorPage() {
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -24,12 +31,14 @@ export function CreatorPage() {
   const [style, setStyle] = useState<StickerStyle>('grunge')
   const [color, setColor] = useState<ColorMood>('chrome')
   const [imageData, setImageData] = useState<string | null>(null)
+  const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(null)
   const [loading, setLoading] = useState(false)
   const [loadingText, setLoadingText] = useState('Rendering...')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const msgRef = useRef(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!loading) return
@@ -41,9 +50,47 @@ export function CreatorPage() {
     return () => clearInterval(iv)
   }, [loading])
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setError('ERR: Only image files are supported.')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      const base64 = result.split(',')[1]
+      setUploadedImage({
+        base64,
+        mimeType: file.type,
+        previewUrl: result,
+        fileName: file.name,
+      })
+      setError('')
+      // Switch to Gemini if on Pollinations — image input requires multimodal
+      if (provider === 'pollinations') {
+        setProvider('gemini')
+        showToast('IMAGE MODE: GEMINI REQUIRED — SWITCHED')
+      }
+    }
+    reader.readAsDataURL(file)
+    // Reset input so same file can be re-selected
+    e.target.value = ''
+  }
+
+  const clearImage = () => {
+    setUploadedImage(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
   const generate = async () => {
     if (!prompt.trim()) { setError('ERR: Input prompt required.'); return }
     if (provider === 'gemini' && !apiKey) { setError('ERR: API key required for Gemini.'); return }
+    if (uploadedImage && provider === 'pollinations') {
+      setError('ERR: Image input requires Gemini. Switch engine or remove the image.')
+      return
+    }
 
     setError(''); setLoading(true); setImageData(null)
     const stylePrompt = STYLE_OPTIONS.find(s => s.id === style)?.prompt ?? ''
@@ -53,7 +100,7 @@ export function CreatorPage() {
     try {
       const data = provider === 'pollinations'
         ? await generateWithPollinations(full, style)
-        : await generateWithGemini(apiKey, full)
+        : await generateWithGemini(apiKey, full, uploadedImage?.base64, uploadedImage?.mimeType)
       setImageData(data)
       showToast('OUTPUT READY')
     } catch (e) {
@@ -118,15 +165,6 @@ export function CreatorPage() {
                   {provider === 'pollinations' ? '* FREE' : 'API KEY REQ'}
                 </span>
               </div>
-              {provider === 'pollinations' && (
-                <p className="font-body text-xs leading-snug mt-2 max-w-xl" style={{ color: 'var(--color-muted2)' }}>
-                  If you get HTTP 403, add a free publishable key from{' '}
-                  <a href="https://enter.pollinations.ai/" target="_blank" rel="noopener noreferrer" className="underline decoration-emerald-600/50 underline-offset-2 hover:decoration-emerald-600">
-                    enter.pollinations.ai
-                  </a>{' '}
-                  as <code className="font-mono text-[11px]">VITE_POLLINATIONS_API_KEY</code> in <code className="font-mono text-[11px]">.env.local</code>, then restart the dev server.
-                </p>
-              )}
             </div>
 
             {/* API key (Gemini only) */}
@@ -143,7 +181,7 @@ export function CreatorPage() {
               </motion.div>
             )}
 
-            {/* Prompt */}
+            {/* Prompt box */}
             <div
               className="rounded-2xl p-px shadow-sm"
               style={{
@@ -169,16 +207,57 @@ export function CreatorPage() {
                       <Sparkles size={16} className="text-emerald-500 shrink-0" aria-hidden />
                     </div>
                     <p className="font-body text-sm mt-1.5 leading-snug" style={{ color: 'var(--color-muted2)' }}>
-                      Describe a character, creature, or vibe — cute, loud, or totally odd. When you’re ready, use ⌘ or Ctrl + Enter to generate.
+                      Describe a character, creature, or vibe — or upload an image to remix it into a sticker.
                     </p>
                   </div>
                 </div>
+
+                {/* Image upload preview */}
+                <AnimatePresence>
+                  {uploadedImage && (
+                    <motion.div
+                      className="flex items-center gap-3 mb-3 px-3 py-2 rounded-xl"
+                      style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)' }}
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                    >
+                      <img
+                        src={uploadedImage.previewUrl}
+                        alt="Reference"
+                        className="w-12 h-12 rounded-lg object-cover shrink-0"
+                        style={{ border: '1px solid rgba(52,211,153,0.3)' }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-mono text-xs tracking-wide truncate" style={{ color: 'var(--color-ink)' }}>
+                          {uploadedImage.fileName}
+                        </p>
+                        <p className="font-mono text-xs mt-0.5" style={{ color: '#10b981' }}>
+                          IMAGE REF LOADED — GEMINI WILL USE THIS
+                        </p>
+                      </div>
+                      <button
+                        onClick={clearImage}
+                        className="shrink-0 p-1 rounded-full transition-colors"
+                        style={{ color: 'var(--color-muted)' }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#dc2626'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'var(--color-muted)'}
+                      >
+                        <X size={14} />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <div className="relative">
                   <textarea
                     value={prompt}
                     onChange={e => setPrompt(e.target.value)}
                     rows={4}
-                    placeholder="Example: a grinning toaster with sunglasses, thick outlines, lots of personality…"
+                    placeholder={uploadedImage
+                      ? 'Describe how to transform this image — e.g. make it a cartoon sticker with thick outlines…'
+                      : 'Example: a grinning toaster with sunglasses, thick outlines, lots of personality…'
+                    }
                     className="w-full px-4 pt-3.5 pb-12 font-body font-semibold text-base outline-none resize-y transition-all leading-relaxed rounded-xl border-2"
                     style={{
                       background: '#fff',
@@ -195,32 +274,69 @@ export function CreatorPage() {
                     }}
                     onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generate() }}
                   />
-                  <div className="absolute bottom-3 left-3 flex gap-1.5 flex-wrap max-w-[calc(100%-1.5rem)]">
-                    {QUICK_TAGS.map(tag => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => setPrompt(p => (p ? `${p}, ${tag}` : tag))}
-                        className="font-mono text-[11px] px-2.5 py-1 rounded-full uppercase tracking-wide transition-all border shadow-sm"
-                        style={{
-                          background: 'linear-gradient(180deg, #fff, rgba(236, 253, 245, 0.9))',
-                          borderColor: 'rgba(52, 211, 153, 0.25)',
-                          color: 'var(--color-muted)',
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.55)'
-                          e.currentTarget.style.color = '#0d9488'
-                          e.currentTarget.style.background = 'linear-gradient(180deg, #fff, rgba(224, 242, 254, 0.85))'
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.borderColor = 'rgba(52, 211, 153, 0.25)'
-                          e.currentTarget.style.color = 'var(--color-muted)'
-                          e.currentTarget.style.background = 'linear-gradient(180deg, #fff, rgba(236, 253, 245, 0.9))'
-                        }}
-                      >
-                        + {tag}
-                      </button>
-                    ))}
+
+                  {/* Bottom row: quick tags + upload button */}
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center gap-1.5">
+                    <div className="flex gap-1.5 flex-wrap flex-1 min-w-0">
+                      {QUICK_TAGS.map(tag => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => setPrompt(p => (p ? `${p}, ${tag}` : tag))}
+                          className="font-mono text-[11px] px-2.5 py-1 rounded-full uppercase tracking-wide transition-all border shadow-sm"
+                          style={{
+                            background: 'linear-gradient(180deg, #fff, rgba(236, 253, 245, 0.9))',
+                            borderColor: 'rgba(52, 211, 153, 0.25)',
+                            color: 'var(--color-muted)',
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.55)'
+                            e.currentTarget.style.color = '#0d9488'
+                            e.currentTarget.style.background = 'linear-gradient(180deg, #fff, rgba(224, 242, 254, 0.85))'
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.borderColor = 'rgba(52, 211, 153, 0.25)'
+                            e.currentTarget.style.color = 'var(--color-muted)'
+                            e.currentTarget.style.background = 'linear-gradient(180deg, #fff, rgba(236, 253, 245, 0.9))'
+                          }}
+                        >
+                          + {tag}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Upload image button */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      title="Upload reference image (Gemini only)"
+                      className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full font-mono text-[11px] uppercase tracking-wide border transition-all shadow-sm"
+                      style={{
+                        background: uploadedImage
+                          ? 'linear-gradient(180deg, rgba(236,253,245,1), rgba(209,250,229,0.9))'
+                          : 'linear-gradient(180deg, #fff, rgba(236, 253, 245, 0.9))',
+                        borderColor: uploadedImage ? 'rgba(52,211,153,0.6)' : 'rgba(52, 211, 153, 0.25)',
+                        color: uploadedImage ? '#059669' : 'var(--color-muted)',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.55)'
+                        e.currentTarget.style.color = '#0d9488'
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.borderColor = uploadedImage ? 'rgba(52,211,153,0.6)' : 'rgba(52, 211, 153, 0.25)'
+                        e.currentTarget.style.color = uploadedImage ? '#059669' : 'var(--color-muted)'
+                      }}
+                    >
+                      <ImagePlus size={12} />
+                      {uploadedImage ? 'CHANGE' : 'IMAGE'}
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
                   </div>
                 </div>
               </div>
@@ -267,7 +383,7 @@ export function CreatorPage() {
               style={{ background: loading ? 'var(--color-disabled)' : '#dc2626', color: loading ? 'var(--color-disabled-text)' : 'white', cursor: loading ? 'not-allowed' : 'pointer' }}
               onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#b91c1c' }}
               onMouseLeave={e => { if (!loading) e.currentTarget.style.background = loading ? 'var(--color-disabled)' : '#dc2626' }}>
-              {loading ? 'PROCESSING...' : 'GENERATE STICKER'}
+              {loading ? 'PROCESSING...' : uploadedImage ? 'TRANSFORM IMAGE' : 'GENERATE STICKER'}
             </motion.button>
           </motion.div>
 

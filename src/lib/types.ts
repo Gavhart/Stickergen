@@ -40,15 +40,15 @@ export interface ColorOption {
 }
 
 export const STYLE_OPTIONS: StyleOption[] = [
-  { id: 'grunge',  label: 'Grunge',   index: '01', prompt: 'grunge distressed sticker art, scratched rough texture, gritty aesthetic, worn edges, high contrast' },
-  { id: 'metal',   label: 'Metal',    index: '02', prompt: 'heavy metal sticker art, sharp angular design, metallic sheen, aggressive bold lines, rock and roll' },
-  { id: 'tattoo',  label: 'Tattoo',   index: '03', prompt: 'traditional tattoo flash art style sticker, bold black outlines, classic tattoo palette, bold shading' },
-  { id: 'chrome',  label: 'Chrome',   index: '04', prompt: 'shiny chrome metallic sticker, reflective liquid metal surface, sleek futuristic, mirror finish' },
-  { id: 'gothic',  label: 'Gothic',   index: '05', prompt: 'gothic dark art sticker, ornate details, dark fantasy, intricate baroque elements, occult aesthetic' },
-  { id: 'neon',    label: 'Neon',     index: '06', prompt: 'dark neon sticker art, pitch black background, bright glowing neon colors, cyberpunk, electric outlines' },
-  { id: 'pixel',   label: 'Pixel',    index: '07', prompt: 'pixel art sticker, 16-bit retro game style, chunky bold pixels, limited dark color palette' },
-  { id: 'street',  label: 'Street',   index: '08', prompt: 'street art graffiti sticker style, spray paint texture, bold urban design, raw energy' },
-  { id: 'minimal', label: 'Minimal',  index: '09', prompt: 'stark minimalist sticker, pure black and white, single bold graphic element, no decoration, clean' },
+  { id: 'grunge',  label: 'Worn',      index: '01', prompt: 'grunge distressed sticker art, scratched rough texture, gritty aesthetic, worn edges, high contrast' },
+  { id: 'metal',   label: 'Steel',     index: '02', prompt: 'heavy metal sticker art, sharp angular design, metallic sheen, aggressive bold lines, rock and roll' },
+  { id: 'tattoo',  label: 'Classic',   index: '03', prompt: 'traditional tattoo flash art style sticker, bold black outlines, classic tattoo palette, bold shading' },
+  { id: 'chrome',  label: 'Mirror',    index: '04', prompt: 'shiny chrome metallic sticker, reflective liquid metal surface, sleek futuristic, mirror finish' },
+  { id: 'gothic',  label: 'Ornate',    index: '05', prompt: 'gothic dark art sticker, ornate details, dark fantasy, intricate baroque elements, occult aesthetic' },
+  { id: 'neon',    label: 'Electric',  index: '06', prompt: 'dark neon sticker art, pitch black background, bright glowing neon colors, cyberpunk, electric outlines' },
+  { id: 'pixel',   label: 'Retro',     index: '07', prompt: 'pixel art sticker, 16-bit retro game style, chunky bold pixels, limited dark color palette' },
+  { id: 'street',  label: 'Urban',     index: '08', prompt: 'street art graffiti sticker style, spray paint texture, bold urban design, raw energy' },
+  { id: 'minimal', label: 'Clean',     index: '09', prompt: 'stark minimalist sticker, pure black and white, single bold graphic element, no decoration, clean' },
 ]
 
 export const COLOR_OPTIONS: ColorOption[] = [

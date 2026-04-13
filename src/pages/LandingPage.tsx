@@ -5,7 +5,7 @@ import { ArrowRight, Zap, Shield, Layers } from 'lucide-react'
 
 const FEATURES = [
   { icon: Zap,    title: 'DUAL ENGINE',  desc: 'Generate with Pollinations (free, no key) or Gemini AI for maximum quality.' },
-  { icon: Layers, title: '9 STYLES',     desc: 'Grunge, Metal, Tattoo, Chrome, Gothic, Neon, Pixel, Street, Minimal.' },
+  { icon: Layers, title: '9 STYLES',     desc: 'Worn, Steel, Classic, Mirror, Ornate, Electric, Retro, Urban, Clean.' },
   { icon: Shield, title: 'YOUR GALLERY', desc: 'Sign in to archive stickers to your account  -  accessible anywhere, forever.' },
 ]
 

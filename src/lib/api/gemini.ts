@@ -42,16 +42,27 @@ async function findImageModel(apiKey: string): Promise<string> {
 
 export async function generateWithGemini(
   apiKey: string,
-  prompt: string
+  prompt: string,
+  imageBase64?: string,
+  imageMimeType?: string
 ): Promise<string> {
   const model = await findImageModel(apiKey)
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+
+  // Build parts — image first if provided, then text
+  const parts: object[] = []
+  if (imageBase64 && imageMimeType) {
+    parts.push({ inlineData: { mimeType: imageMimeType, data: imageBase64 } })
+    parts.push({ text: `Use this image as a reference and transform it into a sticker: ${prompt}` })
+  } else {
+    parts.push({ text: prompt })
+  }
 
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
+      contents: [{ parts }],
       generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
     }),
   })
@@ -65,9 +76,9 @@ export async function generateWithGemini(
   }
 
   const data = await res.json()
-  const parts: Array<{ inlineData?: { mimeType: string; data: string } }> =
+  const parts2: Array<{ inlineData?: { mimeType: string; data: string } }> =
     data?.candidates?.[0]?.content?.parts ?? []
-  const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'))
+  const imgPart = parts2.find(p => p.inlineData?.mimeType?.startsWith('image/'))
   if (!imgPart?.inlineData) throw new Error('No image in response. Try rephrasing your prompt.')
   return imgPart.inlineData.data
 }
