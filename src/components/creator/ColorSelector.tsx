@@ -7,13 +7,13 @@ interface Props {
 }
 
 const SWATCH: Record<ColorMood, string> = {
-  dark: 'linear-gradient(145deg, #18181b 0%, #3f3f46 100%)',
-  blood: 'linear-gradient(145deg, #7f1d1d 0%, #ef4444 100%)',
-  chrome: 'linear-gradient(145deg, #d4d4d8 0%, #71717a 55%, #e4e4e7 100%)',
-  neon: 'linear-gradient(145deg, #0e7490 0%, #22d3ee 50%, #a855f7 100%)',
-  toxic: 'linear-gradient(145deg, #3f6212 0%, #84cc16 55%, #bef264 100%)',
-  void: 'linear-gradient(145deg, #3b0764 0%, #7c3aed 55%, #c084fc 100%)',
-  gold: 'linear-gradient(145deg, #713f12 0%, #eab308 55%, #fde68a 100%)',
+  dark: 'linear-gradient(145deg, #f4f4f5 0%, #d4d4d8 45%, #a8a29e 100%)',
+  blood: 'linear-gradient(145deg, #fecaca 0%, #f87171 45%, #ef4444 100%)',
+  chrome: 'linear-gradient(145deg, #fafafa 0%, #d4d4d8 40%, #e7e5e4 100%)',
+  neon: 'linear-gradient(145deg, #fce7f3 0%, #22d3ee 40%, #a855f7 100%)',
+  toxic: 'linear-gradient(145deg, #ecfccb 0%, #bef264 45%, #84cc16 100%)',
+  void: 'linear-gradient(145deg, #ede9fe 0%, #c4b5fd 45%, #a78bfa 100%)',
+  gold: 'linear-gradient(145deg, #fef9c3 0%, #fde047 45%, #facc15 100%)',
 }
 
 export function ColorSelector({ selected, onChange }: Props) {

@@ -52,13 +52,13 @@ export const STYLE_OPTIONS: StyleOption[] = [
 ]
 
 export const COLOR_OPTIONS: ColorOption[] = [
-  { id: 'dark',      label: 'DARK',      prompt: 'dark monochromatic palette, deep blacks and charcoals, stark white highlights' },
-  { id: 'blood',     label: 'BLOOD',     prompt: 'deep crimson and blood red tones, dark shadows, intense contrast' },
-  { id: 'chrome',    label: 'CHROME',    prompt: 'metallic silver and chrome tones, cool grays, reflective highlights' },
-  { id: 'neon',      label: 'NEON',      prompt: 'electric neon colors on black, glowing bright contrast' },
-  { id: 'toxic',     label: 'TOXIC',     prompt: 'toxic acid green and yellow-green on dark background, hazardous aesthetic' },
-  { id: 'void',      label: 'VOID',      prompt: 'deep purple and violet darkness, cosmic void colors, ultra dark' },
-  { id: 'gold',      label: 'GOLD',      prompt: 'aged gold and bronze tones, dark dramatic shadows' },
+  { id: 'dark',      label: 'SMOKE',     prompt: 'soft smoke gray and warm off-white palette, airy balanced contrast, clean modern sticker colors, light and approachable' },
+  { id: 'blood',     label: 'BERRY',     prompt: 'juicy berry red and coral pop, bright cherry highlights, lively saturated reds, upbeat and punchy' },
+  { id: 'chrome',    label: 'CHROME',    prompt: 'bright silver chrome and pale gray, crisp white reflections, glossy light metallic, fresh and sleek' },
+  { id: 'neon',      label: 'NEON',      prompt: 'electric neon pink cyan and lime, vivid glow, bright high-key background or soft pastel base, festival energy' },
+  { id: 'toxic',     label: 'CITRUS',    prompt: 'fresh citrus lime and chartreuse, sunny yellow-green, zesty spring palette, playful and bright' },
+  { id: 'void',      label: 'NOVA',      prompt: 'soft lavender lilac and cosmic violet pastels, airy purple gradients, dreamy light galaxy tones' },
+  { id: 'gold',      label: 'HONEY',     prompt: 'warm honey gold and soft amber sunshine, light metallic gleam, cheerful golden highlights' },
 ]
 
 export const QUICK_TAGS = ['cosmic', 'retro', 'sparkles', 'chill', 'bold', 'stars', 'coffee', 'waves']

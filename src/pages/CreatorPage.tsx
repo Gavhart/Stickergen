@@ -22,7 +22,7 @@ export function CreatorPage() {
   const [apiKey, setApiKey] = useState('')
   const [prompt, setPrompt] = useState('')
   const [style, setStyle] = useState<StickerStyle>('grunge')
-  const [color, setColor] = useState<ColorMood>('dark')
+  const [color, setColor] = useState<ColorMood>('chrome')
   const [imageData, setImageData] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [loadingText, setLoadingText] = useState('Rendering...')
@@ -118,6 +118,15 @@ export function CreatorPage() {
                   {provider === 'pollinations' ? '* FREE' : 'API KEY REQ'}
                 </span>
               </div>
+              {provider === 'pollinations' && (
+                <p className="font-body text-xs leading-snug mt-2 max-w-xl" style={{ color: 'var(--color-muted2)' }}>
+                  If you get HTTP 403, add a free publishable key from{' '}
+                  <a href="https://enter.pollinations.ai/" target="_blank" rel="noopener noreferrer" className="underline decoration-emerald-600/50 underline-offset-2 hover:decoration-emerald-600">
+                    enter.pollinations.ai
+                  </a>{' '}
+                  as <code className="font-mono text-[11px]">VITE_POLLINATIONS_API_KEY</code> in <code className="font-mono text-[11px]">.env.local</code>, then restart the dev server.
+                </p>
+              )}
             </div>
 
             {/* API key (Gemini only) */}
@@ -237,7 +246,7 @@ export function CreatorPage() {
                   Color mood
                 </p>
                 <p className="font-body text-sm mt-0.5" style={{ color: 'var(--color-muted2)' }}>
-                  Swatches hint at the palette; your prompt still leads the way.
+                  Bright, soft, or sparkly — pick a vibe; your words still steer the art.
                 </p>
               </div>
               <ColorSelector selected={color} onChange={setColor} />
