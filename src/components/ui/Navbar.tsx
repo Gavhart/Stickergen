@@ -22,7 +22,7 @@ export function Navbar() {
   }
 
   const navLinks = [
-    { to: '/create', label: 'CREATE' },
+    { to: '/create',  label: 'CREATE'  },
     { to: '/gallery', label: 'GALLERY' },
   ]
 

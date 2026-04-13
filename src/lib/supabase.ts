@@ -100,3 +100,4 @@ export const deleteSticker = async (sticker: Sticker) => {
   // Remove from DB
   return supabase.from('stickers').delete().eq('id', sticker.id)
 }
+
