@@ -50,15 +50,22 @@ async function callGemini(
   apiKey: string,
   model: string,
   prompt: string,
-  imageBase64?: string,
-  imageMimeType?: string
+  imageBase64List?: string[],
+  imageMimeTypeList?: string[]
 ): Promise<{ status: number; data: unknown }> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
 
   const parts: object[] = []
-  if (imageBase64 && imageMimeType) {
-    parts.push({ inlineData: { mimeType: imageMimeType, data: imageBase64 } })
-    parts.push({ text: `Use this image as a reference and transform it into a sticker: ${prompt}` })
+  const hasReferences = Array.isArray(imageBase64List) && Array.isArray(imageMimeTypeList) && imageBase64List.length > 0
+  if (hasReferences) {
+    const pairedCount = Math.min(imageBase64List.length, imageMimeTypeList.length)
+    for (let i = 0; i < pairedCount; i++) {
+      const imageBase64 = imageBase64List[i]
+      const imageMimeType = imageMimeTypeList[i]
+      if (!imageBase64 || !imageMimeType) continue
+      parts.push({ inlineData: { mimeType: imageMimeType, data: imageBase64 } })
+    }
+    parts.push({ text: `Use these image references and blend their key traits into a single sticker: ${prompt}` })
   } else {
     parts.push({ text: prompt })
   }
@@ -84,10 +91,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'Gemini API key not configured on server.' })
   }
 
-  const { prompt, imageBase64, imageMimeType } = req.body as {
+  const { prompt, imageBase64, imageMimeType, imageBase64List, imageMimeTypeList } = req.body as {
     prompt: string
     imageBase64?: string
     imageMimeType?: string
+    imageBase64List?: string[]
+    imageMimeTypeList?: string[]
   }
 
   if (!prompt) return res.status(400).json({ error: 'Prompt is required.' })
@@ -102,7 +111,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await sleep(RETRY_DELAYS[attempt - 1])
       }
 
-      const { status, data } = await callGemini(apiKey, model, prompt, imageBase64, imageMimeType)
+      const normalizedBase64List = Array.isArray(imageBase64List)
+        ? imageBase64List
+        : (imageBase64 && imageMimeType ? [imageBase64] : undefined)
+      const normalizedMimeTypeList = Array.isArray(imageMimeTypeList)
+        ? imageMimeTypeList
+        : (imageBase64 && imageMimeType ? [imageMimeType] : undefined)
+      const { status, data } = await callGemini(apiKey, model, prompt, normalizedBase64List, normalizedMimeTypeList)
 
       if (status === 429) {
         lastError = 'Rate limit hit — please try again in a moment.'

@@ -16,6 +16,7 @@ import { AuthModal } from '../components/auth/AuthModal'
 
 const LOADING_MSGS = ['Rendering...', 'Processing...', 'Compiling...', 'Executing...', 'Synthesizing...']
 const DAILY_GENERATION_LIMIT = 10
+const PRO_FLAG_PREFIX = 'stickergen:pro:'
 
 function todayKey() {
   const d = new Date()
@@ -38,13 +39,13 @@ interface UploadedImage {
 
 async function generateWithSiteGemini(
   prompt: string,
-  imageBase64?: string,
-  imageMimeType?: string
+  imageBase64List?: string[],
+  imageMimeTypeList?: string[]
 ): Promise<string> {
   const res = await fetch('/api/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, imageBase64, imageMimeType }),
+    body: JSON.stringify({ prompt, imageBase64List, imageMimeTypeList }),
   })
   const data = await res.json() as { imageBase64?: string; error?: string }
   if (!res.ok || !data.imageBase64) throw new Error(data.error ?? 'Generation failed.')
@@ -61,7 +62,7 @@ export function CreatorPage() {
   const [style, setStyle] = useState<StickerStyle>('grunge')
   const [color, setColor] = useState<ColorMood>('chrome')
   const [imageData, setImageData] = useState<string | null>(null)
-  const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(null)
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingText, setLoadingText] = useState('Rendering...')
   const [error, setError] = useState('')
@@ -69,6 +70,8 @@ export function CreatorPage() {
   const [removingBg, setRemovingBg] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [dailyCount, setDailyCount] = useState(0)
+  const [isPro, setIsPro] = useState(false)
+  const [startingCheckout, setStartingCheckout] = useState(false)
   const msgRef = useRef(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -89,35 +92,73 @@ export function CreatorPage() {
     setDailyCount(Number.isFinite(stored) && stored > 0 ? stored : 0)
   }, [user])
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/')) { setError('ERR: Only image files are supported.'); return }
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = reader.result as string
-      setUploadedImage({ base64: result.split(',')[1], mimeType: file.type, previewUrl: result, fileName: file.name })
-      setError('')
-      if (provider !== 'gemini') { setProvider('gemini'); showToast('IMAGE MODE: SWITCHED TO GEMINI') }
+  useEffect(() => {
+    if (!user) { setIsPro(false); return }
+    const proKey = `${PRO_FLAG_PREFIX}${user.id}`
+    const fromStorage = localStorage.getItem(proKey) === '1'
+
+    const params = new URLSearchParams(window.location.search)
+    const upgraded = params.get('upgraded') === '1'
+    if (upgraded) {
+      localStorage.setItem(proKey, '1')
+      setIsPro(true)
+      showToast('PRO PLAN ACTIVE')
+      params.delete('upgraded')
+      const qs = params.toString()
+      const next = `${window.location.pathname}${qs ? `?${qs}` : ''}`
+      window.history.replaceState({}, '', next)
+      return
     }
-    reader.readAsDataURL(file)
+
+    setIsPro(fromStorage)
+  }, [user, showToast])
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
+    const validFiles = files.filter(file => file.type.startsWith('image/'))
+    if (validFiles.length === 0) { setError('ERR: Only image files are supported.'); return }
+    if (validFiles.length !== files.length) {
+      setError('ERR: Some files were skipped. Only image files are supported.')
+    }
+
+    Promise.all(validFiles.map(file => new Promise<UploadedImage>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const result = reader.result as string
+        resolve({ base64: result.split(',')[1], mimeType: file.type, previewUrl: result, fileName: file.name })
+      }
+      reader.onerror = () => reject(new Error(`Failed to read ${file.name}`))
+      reader.readAsDataURL(file)
+    }))).then(nextImages => {
+      setUploadedImages(prev => [...prev, ...nextImages])
+      if (validFiles.length === files.length) setError('')
+      if (provider !== 'gemini') { setProvider('gemini'); showToast('IMAGE MODE: SWITCHED TO GEMINI') }
+    }).catch(err => {
+      setError('ERR: ' + (err instanceof Error ? err.message : 'Failed to process images.'))
+    })
+
     e.target.value = ''
   }
 
-  const clearImage = () => {
-    setUploadedImage(null)
+  const clearImage = (index?: number) => {
+    if (typeof index === 'number') {
+      setUploadedImages(prev => prev.filter((_, i) => i !== index))
+      return
+    }
+    setUploadedImages([])
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   const generate = async () => {
     if (!user) { setShowAuth(true); return }
     if (!prompt.trim()) { setError('ERR: Input prompt required.'); return }
-    if (dailyCount >= DAILY_GENERATION_LIMIT) {
+    if (!isPro && dailyCount >= DAILY_GENERATION_LIMIT) {
       setError(`ERR: Daily generation limit reached (${DAILY_GENERATION_LIMIT}/day). Try again tomorrow.`)
       return
     }
     if (provider === 'fal' && !falKey) { setError('ERR: fal.ai API key required. Get one free at fal.ai.'); return }
-    if (uploadedImage && provider === 'fal') { setError('ERR: Image input requires Gemini engine.'); return }
+    if (uploadedImages.length > 0 && provider === 'fal') { setError('ERR: Image input requires Gemini engine.'); return }
 
     setError(''); setLoading(true); setImageData(null)
     const stylePrompt = STYLE_OPTIONS.find(s => s.id === style)?.prompt ?? ''
@@ -127,16 +168,41 @@ export function CreatorPage() {
     try {
       const data = provider === 'fal'
         ? await generateWithFal(falKey, full, style)
-        : await generateWithSiteGemini(full, uploadedImage?.base64, uploadedImage?.mimeType)
+        : await generateWithSiteGemini(
+          full,
+          uploadedImages.map(img => img.base64),
+          uploadedImages.map(img => img.mimeType)
+        )
       setImageData(data)
-      const next = dailyCount + 1
-      setDailyCount(next)
-      localStorage.setItem(generationCounterStorageKey(user.id), String(next))
+      if (!isPro) {
+        const next = dailyCount + 1
+        setDailyCount(next)
+        localStorage.setItem(generationCounterStorageKey(user.id), String(next))
+      }
       showToast('OUTPUT READY')
     } catch (e) {
       setError('ERR: ' + (e instanceof Error ? e.message : 'Generation failed.'))
     } finally {
       setLoading(false)
+    }
+  }
+
+  const startUpgrade = async () => {
+    if (!user || startingCheckout) return
+    setStartingCheckout(true)
+    try {
+      const res = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, email: user.email }),
+      })
+      const data = await res.json() as { url?: string; error?: string }
+      if (!res.ok || !data.url) throw new Error(data.error ?? 'Failed to start checkout.')
+      window.location.href = data.url
+    } catch (e) {
+      setError('ERR: ' + (e instanceof Error ? e.message : 'Checkout failed.'))
+    } finally {
+      setStartingCheckout(false)
     }
   }
 
@@ -294,27 +360,42 @@ export function CreatorPage() {
                 </div>
 
                 <AnimatePresence>
-                  {uploadedImage && (
-                    <motion.div className="flex items-center gap-3 mb-3 px-3 py-2 rounded-xl"
+                  {uploadedImages.length > 0 && (
+                    <motion.div className="mb-3 px-3 py-2 rounded-xl"
                       style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)' }}
                       initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-                      <img src={uploadedImage.previewUrl} alt="Reference" className="w-12 h-12 rounded-lg object-cover shrink-0" style={{ border: '1px solid rgba(52,211,153,0.3)' }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-mono text-xs tracking-wide truncate" style={{ color: 'var(--color-ink)' }}>{uploadedImage.fileName}</p>
-                        <p className="font-mono text-xs mt-0.5" style={{ color: '#10b981' }}>IMAGE REF LOADED — GEMINI WILL TRANSFORM THIS</p>
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <p className="font-mono text-xs mt-0.5" style={{ color: '#10b981' }}>
+                          {uploadedImages.length} IMAGE REF{uploadedImages.length > 1 ? 'S' : ''} LOADED — GEMINI WILL BLEND THESE
+                        </p>
+                        <button onClick={() => clearImage()} className="shrink-0 p-1 rounded-full transition-colors" style={{ color: 'var(--color-muted)' }}
+                          onMouseEnter={e => e.currentTarget.style.color = '#dc2626'}
+                          onMouseLeave={e => e.currentTarget.style.color = 'var(--color-muted)'}>
+                          <X size={14} />
+                        </button>
                       </div>
-                      <button onClick={clearImage} className="shrink-0 p-1 rounded-full transition-colors" style={{ color: 'var(--color-muted)' }}
-                        onMouseEnter={e => e.currentTarget.style.color = '#dc2626'}
-                        onMouseLeave={e => e.currentTarget.style.color = 'var(--color-muted)'}>
-                        <X size={14} />
-                      </button>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {uploadedImages.map((img, index) => (
+                          <div key={`${img.fileName}-${index}`} className="relative rounded-lg overflow-hidden">
+                            <img src={img.previewUrl} alt={img.fileName} className="w-full h-20 object-cover" style={{ border: '1px solid rgba(52,211,153,0.3)' }} />
+                            <button
+                              onClick={() => clearImage(index)}
+                              className="absolute top-1 right-1 p-1 rounded-full"
+                              style={{ background: 'rgba(0,0,0,0.5)', color: '#fff' }}
+                              title={`Remove ${img.fileName}`}
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
                 <div className="relative">
                   <textarea value={prompt} onChange={e => setPrompt(e.target.value)} rows={4}
-                    placeholder={uploadedImage ? 'Describe how to transform this image...' : 'Example: a grinning toaster with sunglasses, thick outlines, lots of personality...'}
+                    placeholder={uploadedImages.length > 0 ? 'Describe how to transform these images...' : 'Example: a grinning toaster with sunglasses, thick outlines, lots of personality...'}
                     className="w-full px-4 pt-3.5 pb-12 font-body font-semibold text-base outline-none resize-y transition-all leading-relaxed rounded-xl border-2"
                     style={{ background: '#fff', borderColor: 'rgba(167,243,208,0.65)', color: 'var(--color-ink)' }}
                     onFocus={e => { e.currentTarget.style.borderColor = 'rgba(52,211,153,0.65)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(52,211,153,0.15)' }}
@@ -347,13 +428,13 @@ export function CreatorPage() {
                       onClick={() => { if (provider !== 'gemini') { setProvider('gemini'); showToast('IMAGE MODE: SWITCHED TO GEMINI') } fileInputRef.current?.click() }}
                       title="Upload reference image"
                       className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full font-mono text-[11px] uppercase tracking-wide border transition-all shadow-sm"
-                      style={{ background: uploadedImage ? 'linear-gradient(180deg,rgba(236,253,245,1),rgba(209,250,229,0.9))' : 'linear-gradient(180deg,#fff,rgba(236,253,245,0.9))', borderColor: uploadedImage ? 'rgba(52,211,153,0.6)' : 'rgba(52,211,153,0.25)', color: uploadedImage ? '#059669' : 'var(--color-muted)' }}
+                      style={{ background: uploadedImages.length > 0 ? 'linear-gradient(180deg,rgba(236,253,245,1),rgba(209,250,229,0.9))' : 'linear-gradient(180deg,#fff,rgba(236,253,245,0.9))', borderColor: uploadedImages.length > 0 ? 'rgba(52,211,153,0.6)' : 'rgba(52,211,153,0.25)', color: uploadedImages.length > 0 ? '#059669' : 'var(--color-muted)' }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(56,189,248,0.55)'; e.currentTarget.style.color = '#0d9488' }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = uploadedImage ? 'rgba(52,211,153,0.6)' : 'rgba(52,211,153,0.25)'; e.currentTarget.style.color = uploadedImage ? '#059669' : 'var(--color-muted)' }}>
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = uploadedImages.length > 0 ? 'rgba(52,211,153,0.6)' : 'rgba(52,211,153,0.25)'; e.currentTarget.style.color = uploadedImages.length > 0 ? '#059669' : 'var(--color-muted)' }}>
                       <ImagePlus size={12} />
-                      {uploadedImage ? 'CHANGE' : 'IMAGE'}
+                      {uploadedImages.length > 0 ? 'ADD MORE' : 'IMAGE'}
                     </button>
-                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                    <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
                   </div>
                 </div>
               </div>
@@ -389,12 +470,28 @@ export function CreatorPage() {
             {/* Generate */}
             <motion.button onClick={generate} disabled={loading} whileTap={{ scale: 0.98 }}
               className="w-full py-5 font-display text-2xl tracking-widest uppercase btn-retro"
-              style={{ background: loading || dailyCount >= DAILY_GENERATION_LIMIT ? 'var(--color-disabled)' : '#dc2626', color: loading || dailyCount >= DAILY_GENERATION_LIMIT ? 'var(--color-disabled-text)' : 'white', cursor: loading || dailyCount >= DAILY_GENERATION_LIMIT ? 'not-allowed' : 'pointer', border: '1px solid', borderColor: loading || dailyCount >= DAILY_GENERATION_LIMIT ? 'transparent' : '#b91c1c', boxShadow: loading || dailyCount >= DAILY_GENERATION_LIMIT ? 'none' : '3px 3px 0 rgba(0,0,0,0.2)' }}>
-              {loading ? 'PROCESSING...' : uploadedImage ? 'TRANSFORM IMAGE' : 'GENERATE STICKER'}
+              style={{ background: loading || (!isPro && dailyCount >= DAILY_GENERATION_LIMIT) ? 'var(--color-disabled)' : '#dc2626', color: loading || (!isPro && dailyCount >= DAILY_GENERATION_LIMIT) ? 'var(--color-disabled-text)' : 'white', cursor: loading || (!isPro && dailyCount >= DAILY_GENERATION_LIMIT) ? 'not-allowed' : 'pointer', border: '1px solid', borderColor: loading || (!isPro && dailyCount >= DAILY_GENERATION_LIMIT) ? 'transparent' : '#b91c1c', boxShadow: loading || (!isPro && dailyCount >= DAILY_GENERATION_LIMIT) ? 'none' : '3px 3px 0 rgba(0,0,0,0.2)' }}>
+              {loading ? 'PROCESSING...' : uploadedImages.length > 0 ? 'TRANSFORM IMAGES' : 'GENERATE STICKER'}
             </motion.button>
             <p className="font-mono text-xs text-center" style={{ color: 'var(--color-muted2)' }}>
-              Daily limit: {dailyCount}/{DAILY_GENERATION_LIMIT}
+              {isPro ? 'Pro plan active — unlimited generations' : `Daily limit: ${dailyCount}/${DAILY_GENERATION_LIMIT}`}
             </p>
+            {!isPro && dailyCount >= DAILY_GENERATION_LIMIT && (
+              <div className="retro-card p-4 text-center" style={{ background: 'var(--color-surface)' }}>
+                <p className="font-mono text-xs tracking-widest mb-2" style={{ color: '#dc2626' }}>DAILY LIMIT REACHED</p>
+                <p className="font-body text-sm mb-4" style={{ color: 'var(--color-muted2)' }}>
+                  Upgrade to Pro for unlimited generations.
+                </p>
+                <button
+                  type="button"
+                  onClick={startUpgrade}
+                  disabled={startingCheckout}
+                  className="btn-retro btn-retro-primary w-full py-3 font-display text-xl tracking-widest"
+                >
+                  {startingCheckout ? 'OPENING CHECKOUT...' : 'UPGRADE — $9.99/MO'}
+                </button>
+              </div>
+            )}
           </motion.div>
 
           {/* RIGHT: Output */}
