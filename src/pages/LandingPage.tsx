@@ -1,7 +1,7 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, Zap, Shield, Layers, Terminal } from 'lucide-react'
+import { ArrowRight, Zap, Shield, Layers } from 'lucide-react'
 
 const FEATURES = [
   {
@@ -24,18 +24,8 @@ const FEATURES = [
   },
 ]
 
-const BOOT_LINES = [
-  'GAVDADDY SYSTEMS v2.4.1',
-  'Loading AI modules........OK',
-  'Flux engine................OK',
-  'Gemini multimodal..........OK',
-  'Ready.',
-]
-
 export function LandingPage() {
   const h1Ref = useRef<HTMLHeadingElement>(null)
-  const [bootLine, setBootLine] = useState(0)
-  const [bootDone, setBootDone] = useState(false)
 
   // Glitch loop
   useEffect(() => {
@@ -50,69 +40,12 @@ export function LandingPage() {
     return () => clearTimeout(t)
   }, [])
 
-  // Boot sequence
-  useEffect(() => {
-    if (bootLine >= BOOT_LINES.length) {
-      setTimeout(() => setBootDone(true), 400)
-      return
-    }
-    const t = setTimeout(() => setBootLine(l => l + 1), bootLine === 0 ? 300 : 380)
-    return () => clearTimeout(t)
-  }, [bootLine])
-
   return (
     <div className="grid-bg scanlines corner-glow min-h-screen">
       <div className="relative z-10 max-w-6xl mx-auto px-6">
 
         {/* Hero */}
         <section className="pt-20 pb-16 md:pt-32 md:pb-24">
-
-          {/* Boot terminal */}
-          <motion.div
-            className="mb-8 inline-block"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-          >
-            <div
-              style={{
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border-strong)',
-                borderLeft: '3px solid #dc2626',
-                padding: '10px 14px',
-                minWidth: '280px',
-              }}
-            >
-              <div className="flex items-center gap-2 mb-2" style={{ borderBottom: '1px solid var(--color-border)', paddingBottom: '6px' }}>
-                <Terminal size={11} style={{ color: '#dc2626' }} />
-                <span className="font-mono" style={{ fontSize: '0.6rem', color: 'var(--color-muted)', letterSpacing: '0.1em' }}>
-                  TERMINAL v2.4.1
-                </span>
-              </div>
-              {BOOT_LINES.slice(0, bootLine).map((line, i) => (
-                <div
-                  key={i}
-                  className="font-mono"
-                  style={{
-                    fontSize: '0.62rem',
-                    lineHeight: '1.7',
-                    color: i === BOOT_LINES.length - 1 ? '#dc2626' : 'var(--color-muted2)',
-                    letterSpacing: '0.04em',
-                  }}
-                >
-                  {line}
-                </div>
-              ))}
-              {!bootDone && (
-                <span
-                  className="font-mono"
-                  style={{ fontSize: '0.62rem', color: '#dc2626', animation: 'blink 0.9s step-end infinite' }}
-                >
-                  _
-                </span>
-              )}
-            </div>
-          </motion.div>
 
           {/* Main headline */}
           <motion.div
