@@ -45,14 +45,13 @@ export function GalleryPage() {
 
   if (!user) return (
     <div className="min-h-screen grid-bg scanlines flex items-center justify-center">
-      <motion.div className="text-center max-w-sm p-8" style={{ border: '1px solid var(--color-border)', borderLeft: '3px solid #dc2626', background: 'var(--color-surface)', boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}
+      <motion.div className="text-center max-w-sm p-8" className='retro-card' style={{ background: 'var(--color-surface)' }}
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <p className="font-mono text-xs tracking-widest mb-3" style={{ color: '#dc2626' }}>// AUTH REQUIRED</p>
         <h2 className="font-display text-4xl tracking-widest mb-4">ACCESS DENIED</h2>
         <p className="font-mono text-xs mb-6" style={{ color: 'var(--color-muted)' }}>Sign in to view your saved sticker archive.</p>
         <button onClick={() => setShowAuth(true)}
-          className="px-8 py-3 font-display text-xl tracking-widest"
-          style={{ background: '#dc2626', color: 'white' }}>
+          className="btn-retro btn-retro-primary px-8 py-3 font-display text-xl tracking-widest">
           SIGN IN
         </button>
       </motion.div>

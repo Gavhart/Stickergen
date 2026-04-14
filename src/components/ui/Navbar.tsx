@@ -30,22 +30,55 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-40" style={{ background: 'var(--color-nav-bg)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--color-border)' }}>
+      <nav
+        className="sticky top-0 z-40"
+        style={{
+          background: 'var(--color-nav-bg)',
+          backdropFilter: 'blur(14px)',
+          borderBottom: '1px solid var(--color-border-strong)',
+        }}
+      >
+        {/* Top red accent bar */}
+        <div style={{ height: '2px', background: 'linear-gradient(90deg, #dc2626 0%, #991b1b 55%, transparent 100%)' }} />
+
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between h-14">
+
           {/* Logo */}
-          <Link to="/" className="font-display text-2xl tracking-widest" style={{ letterSpacing: '0.15em' }}>
-            STICKER<span style={{ color: '#dc2626' }}>GEN</span>
+          <Link to="/" className="flex items-baseline gap-1.5 group" style={{ textDecoration: 'none' }}>
+            <span
+              className="font-display"
+              style={{ fontSize: '1.5rem', letterSpacing: '0.15em', color: 'var(--color-ink)', lineHeight: 1 }}
+            >
+              GAVDADDY
+            </span>
+            <span
+              className="font-mono"
+              style={{
+                fontSize: '0.58rem',
+                letterSpacing: '0.14em',
+                color: '#dc2626',
+                paddingBottom: '2px',
+                borderBottom: '1px solid #dc2626',
+              }}
+            >
+              STICKERS
+            </span>
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-0.5">
             {navLinks.map(link => (
-              <Link key={link.to} to={link.to}
-                className="font-mono text-xs tracking-widest px-4 py-2 transition-all"
+              <Link
+                key={link.to}
+                to={link.to}
+                className="font-ui text-sm tracking-widest px-4 py-2 transition-all"
                 style={{
+                  fontWeight: 600,
+                  letterSpacing: '0.14em',
                   color: isActive(link.to) ? '#dc2626' : 'var(--color-muted2)',
-                  borderBottom: isActive(link.to) ? '1px solid #dc2626' : '1px solid transparent',
-                }}>
+                  borderBottom: isActive(link.to) ? '2px solid #dc2626' : '2px solid transparent',
+                }}
+              >
                 {link.label}
               </Link>
             ))}
@@ -55,67 +88,117 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             {user ? (
               <>
-                <Link to="/profile"
-                  className="flex items-center gap-2 px-3 py-2 font-mono text-xs tracking-widest transition-all"
-                  style={{ color: 'var(--color-muted2)', border: '1px solid var(--color-border)' }}
-                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-ink)'; e.currentTarget.style.borderColor = 'var(--color-border-strong)' }}
-                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-muted2)'; e.currentTarget.style.borderColor = 'var(--color-border)' }}>
-                  <User size={13} />
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-2 px-3 py-1.5 font-mono text-xs tracking-widest transition-all"
+                  style={{
+                    color: 'var(--color-muted2)',
+                    border: '1px solid var(--color-border-strong)',
+                    background: 'var(--color-surface2)',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.color = 'var(--color-ink)'
+                    e.currentTarget.style.borderColor = '#dc2626'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = 'var(--color-muted2)'
+                    e.currentTarget.style.borderColor = 'var(--color-border-strong)'
+                  }}
+                >
+                  <User size={12} />
                   {profile?.username ?? 'PROFILE'}
                 </Link>
-                <button onClick={handleSignOut}
-                  className="flex items-center gap-2 px-3 py-2 font-mono text-xs tracking-widest transition-all"
-                  style={{ color: 'var(--color-muted)' }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#dc2626'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'var(--color-muted)'}>
-                  <LogOut size={13} />
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center px-3 py-1.5 font-mono text-xs tracking-widest transition-all"
+                  style={{ color: 'var(--color-muted)', border: '1px solid transparent' }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.color = '#dc2626'
+                    e.currentTarget.style.borderColor = 'rgba(220,38,38,0.25)'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = 'var(--color-muted)'
+                    e.currentTarget.style.borderColor = 'transparent'
+                  }}
+                >
+                  <LogOut size={12} />
                 </button>
               </>
             ) : (
-              <button onClick={() => setShowAuth(true)}
-                className="px-5 py-2 font-mono text-xs tracking-widest uppercase transition-all"
-                style={{ background: '#dc2626', color: 'white' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#b91c1c'}
-                onMouseLeave={e => e.currentTarget.style.background = '#dc2626'}>
+              <button
+                onClick={() => setShowAuth(true)}
+                className="btn-retro btn-retro-primary px-5 py-2 text-sm"
+                style={{ fontFamily: 'var(--font-ui)', fontWeight: 700, letterSpacing: '0.14em' }}
+              >
                 SIGN IN
               </button>
             )}
           </div>
 
           {/* Mobile menu btn */}
-          <button className="md:hidden p-2" style={{ color: 'var(--color-muted2)' }} onClick={() => setMenuOpen(!menuOpen)}>
+          <button
+            className="md:hidden p-2"
+            style={{ color: 'var(--color-muted2)' }}
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile dropdown */}
         <AnimatePresence>
           {menuOpen && (
-            <motion.div className="md:hidden border-t" style={{ borderColor: 'var(--color-border)', background: 'var(--color-nav-mobile-bg)' }}
-              initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-              <div className="px-6 py-4 space-y-2">
+            <motion.div
+              className="md:hidden border-t"
+              style={{ borderColor: 'var(--color-border-strong)', background: 'var(--color-nav-mobile-bg)' }}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+            >
+              <div className="px-6 py-3 space-y-0">
                 {navLinks.map(link => (
-                  <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)}
-                    className="block font-mono text-xs tracking-widest py-2"
-                    style={{ color: isActive(link.to) ? '#dc2626' : 'var(--color-muted2)' }}>
-                    // {link.label}
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 font-mono text-xs tracking-widest py-2.5 border-b"
+                    style={{
+                      color: isActive(link.to) ? '#dc2626' : 'var(--color-muted2)',
+                      borderColor: 'var(--color-border)',
+                    }}
+                  >
+                    <span style={{ color: '#dc2626', opacity: isActive(link.to) ? 1 : 0.4 }}>{'>'}</span>
+                    {link.label}
                   </Link>
                 ))}
                 {user ? (
                   <>
-                    <Link to="/profile" onClick={() => setMenuOpen(false)}
-                      className="block font-mono text-xs tracking-widest py-2" style={{ color: 'var(--color-muted2)' }}>
-                      // PROFILE
+                    <Link
+                      to="/profile"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 font-mono text-xs tracking-widest py-2.5 border-b"
+                      style={{ color: 'var(--color-muted2)', borderColor: 'var(--color-border)' }}
+                    >
+                      <span style={{ color: '#dc2626', opacity: 0.4 }}>{'>'}</span>
+                      PROFILE
                     </Link>
-                    <button onClick={() => { handleSignOut(); setMenuOpen(false) }}
-                      className="block font-mono text-xs tracking-widest py-2 w-full text-left" style={{ color: 'var(--color-muted)' }}>
-                      // SIGN OUT
+                    <button
+                      onClick={() => { handleSignOut(); setMenuOpen(false) }}
+                      className="flex items-center gap-2 font-mono text-xs tracking-widest py-2.5 w-full text-left"
+                      style={{ color: 'var(--color-muted)' }}
+                    >
+                      <span style={{ color: '#dc2626', opacity: 0.4 }}>{'>'}</span>
+                      SIGN OUT
                     </button>
                   </>
                 ) : (
-                  <button onClick={() => { setShowAuth(true); setMenuOpen(false) }}
-                    className="block font-mono text-xs tracking-widest py-2 w-full text-left" style={{ color: '#dc2626' }}>
-                    // SIGN IN
+                  <button
+                    onClick={() => { setShowAuth(true); setMenuOpen(false) }}
+                    className="flex items-center gap-2 font-mono text-xs tracking-widest py-2.5 w-full text-left"
+                    style={{ color: '#dc2626' }}
+                  >
+                    <span>{'>'}</span>
+                    SIGN IN
                   </button>
                 )}
               </div>

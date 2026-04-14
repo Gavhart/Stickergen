@@ -142,7 +142,7 @@ export function CreatorPage() {
       <div className="grid-bg scanlines corner-glow min-h-screen flex items-center justify-center px-6">
         <motion.div
           className="max-w-md w-full text-center p-10"
-          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: '3px solid #dc2626' }}
+          className='retro-card' style={{ background: 'var(--color-surface)' }}
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <p className="font-mono text-xs tracking-widest mb-3" style={{ color: '#dc2626' }}>// ACCESS RESTRICTED</p>
           <h2 className="font-display text-5xl tracking-widest mb-4">SIGN IN<span style={{ color: '#dc2626' }}>.</span></h2>
@@ -152,10 +152,7 @@ export function CreatorPage() {
           </p>
           <button
             onClick={() => setShowAuth(true)}
-            className="w-full py-4 font-display text-xl tracking-widest uppercase transition-all mb-4"
-            style={{ background: '#dc2626', color: 'white' }}
-            onMouseEnter={e => e.currentTarget.style.background = '#b91c1c'}
-            onMouseLeave={e => e.currentTarget.style.background = '#dc2626'}>
+            className="btn-retro btn-retro-primary w-full py-4 font-display text-xl tracking-widest mb-4">
             CREATE ACCOUNT / SIGN IN
           </button>
           <Link to="/"
