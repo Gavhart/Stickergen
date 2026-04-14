@@ -34,7 +34,7 @@ export function LandingPage() {
             className="font-mono text-xs tracking-widest mb-6"
             style={{ color: '#dc2626' }}
             initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-            // AI-POWERED STICKER CREATION ENGINE
+            AI STICKER STUDIO
           </motion.p>
 
           <motion.h1
@@ -48,12 +48,10 @@ export function LandingPage() {
           </motion.h1>
 
           <motion.p
-            className="font-mono text-sm leading-loose mb-10 max-w-lg"
+            className="font-body text-lg leading-relaxed mb-10 max-w-lg"
             style={{ color: 'var(--color-muted2)' }}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-            {'// Type a concept. Pick a style.'}<br />
-            {'// AI renders the sticker. Download it.'}<br />
-            {'// No bullshit. Just output.'}
+            Describe an idea, choose a look, and download a sticker when it’s ready.
           </motion.p>
 
           <motion.div
@@ -81,7 +79,7 @@ export function LandingPage() {
         {/* Divider */}
         <div className="flex items-center gap-4 mb-16 pt-px" style={{ borderTop: '1px solid var(--color-border)' }}>
           <div className="w-8 h-0.5 mt-0" style={{ background: '#dc2626' }} />
-          <span className="font-mono text-xs tracking-widest" style={{ color: 'var(--color-muted)' }}>FEATURES</span>
+          <span className="font-mono text-xs tracking-widest" style={{ color: 'var(--color-muted)' }}>OVERVIEW</span>
         </div>
 
         {/* Feature grid */}
@@ -102,10 +100,6 @@ export function LandingPage() {
         {/* CTA */}
         <section className="text-center pb-24">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
-            <p className="font-mono text-xs tracking-widest mb-4" style={{ color: '#dc2626' }}>// READY TO START?</p>
-            <h2 className="font-display text-6xl tracking-widest mb-8">
-              FREE<span style={{ color: '#dc2626' }}>.</span> FAST<span style={{ color: '#dc2626' }}>.</span> YOURS<span style={{ color: '#dc2626' }}>.</span>
-            </h2>
             <Link
               to="/create"
               className="inline-flex items-center gap-3 px-10 py-5 font-display text-2xl tracking-widest uppercase transition-all"
