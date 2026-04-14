@@ -15,6 +15,19 @@ import { removeWhiteBackground } from '../lib/imageUtils'
 import { AuthModal } from '../components/auth/AuthModal'
 
 const LOADING_MSGS = ['Rendering...', 'Processing...', 'Compiling...', 'Executing...', 'Synthesizing...']
+const DAILY_GENERATION_LIMIT = 10
+
+function todayKey() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function generationCounterStorageKey(userId: string) {
+  return `stickergen:daily-generations:${userId}:${todayKey()}`
+}
 
 interface UploadedImage {
   base64: string
@@ -55,6 +68,7 @@ export function CreatorPage() {
   const [saving, setSaving] = useState(false)
   const [removingBg, setRemovingBg] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
+  const [dailyCount, setDailyCount] = useState(0)
   const msgRef = useRef(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -67,6 +81,13 @@ export function CreatorPage() {
     }, 1400)
     return () => clearInterval(iv)
   }, [loading])
+
+  useEffect(() => {
+    if (!user) { setDailyCount(0); return }
+    const key = generationCounterStorageKey(user.id)
+    const stored = Number(localStorage.getItem(key) ?? '0')
+    setDailyCount(Number.isFinite(stored) && stored > 0 ? stored : 0)
+  }, [user])
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -91,6 +112,10 @@ export function CreatorPage() {
   const generate = async () => {
     if (!user) { setShowAuth(true); return }
     if (!prompt.trim()) { setError('ERR: Input prompt required.'); return }
+    if (dailyCount >= DAILY_GENERATION_LIMIT) {
+      setError(`ERR: Daily generation limit reached (${DAILY_GENERATION_LIMIT}/day). Try again tomorrow.`)
+      return
+    }
     if (provider === 'fal' && !falKey) { setError('ERR: fal.ai API key required. Get one free at fal.ai.'); return }
     if (uploadedImage && provider === 'fal') { setError('ERR: Image input requires Gemini engine.'); return }
 
@@ -104,6 +129,9 @@ export function CreatorPage() {
         ? await generateWithFal(falKey, full, style)
         : await generateWithSiteGemini(full, uploadedImage?.base64, uploadedImage?.mimeType)
       setImageData(data)
+      const next = dailyCount + 1
+      setDailyCount(next)
+      localStorage.setItem(generationCounterStorageKey(user.id), String(next))
       showToast('OUTPUT READY')
     } catch (e) {
       setError('ERR: ' + (e instanceof Error ? e.message : 'Generation failed.'))
@@ -361,9 +389,12 @@ export function CreatorPage() {
             {/* Generate */}
             <motion.button onClick={generate} disabled={loading} whileTap={{ scale: 0.98 }}
               className="w-full py-5 font-display text-2xl tracking-widest uppercase btn-retro"
-              style={{ background: loading ? 'var(--color-disabled)' : '#dc2626', color: loading ? 'var(--color-disabled-text)' : 'white', cursor: loading ? 'not-allowed' : 'pointer', border: '1px solid', borderColor: loading ? 'transparent' : '#b91c1c', boxShadow: loading ? 'none' : '3px 3px 0 rgba(0,0,0,0.2)' }}>
+              style={{ background: loading || dailyCount >= DAILY_GENERATION_LIMIT ? 'var(--color-disabled)' : '#dc2626', color: loading || dailyCount >= DAILY_GENERATION_LIMIT ? 'var(--color-disabled-text)' : 'white', cursor: loading || dailyCount >= DAILY_GENERATION_LIMIT ? 'not-allowed' : 'pointer', border: '1px solid', borderColor: loading || dailyCount >= DAILY_GENERATION_LIMIT ? 'transparent' : '#b91c1c', boxShadow: loading || dailyCount >= DAILY_GENERATION_LIMIT ? 'none' : '3px 3px 0 rgba(0,0,0,0.2)' }}>
               {loading ? 'PROCESSING...' : uploadedImage ? 'TRANSFORM IMAGE' : 'GENERATE STICKER'}
             </motion.button>
+            <p className="font-mono text-xs text-center" style={{ color: 'var(--color-muted2)' }}>
+              Daily limit: {dailyCount}/{DAILY_GENERATION_LIMIT}
+            </p>
           </motion.div>
 
           {/* RIGHT: Output */}
