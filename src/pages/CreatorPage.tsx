@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Download, Archive, RotateCcw, PenLine, Sparkles, ImagePlus, X, ArrowRight } from 'lucide-react'
+import { Download, Archive, RotateCcw, PenLine, Sparkles, ImagePlus, X, ArrowRight, Dice5 } from 'lucide-react'
 import { StyleSelector } from '../components/creator/StyleSelector'
 import { ColorSelector } from '../components/creator/ColorSelector'
 import { StickerDisplay } from '../components/creator/StickerDisplay'
@@ -10,7 +10,8 @@ import { buildPrompt } from '../lib/api/gemini'
 import { saveSticker } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import { STYLE_OPTIONS, COLOR_OPTIONS, QUICK_TAGS, type StickerStyle, type ColorMood, type Provider } from '../lib/types'
+import { STYLE_OPTIONS, COLOR_OPTIONS, QUICK_TAGS, INSPIRE_PROMPTS, type StickerStyle, type ColorMood, type Provider } from '../lib/types'
+import { removeWhiteBackground } from '../lib/imageUtils'
 import { AuthModal } from '../components/auth/AuthModal'
 
 const LOADING_MSGS = ['Rendering...', 'Processing...', 'Compiling...', 'Executing...', 'Synthesizing...']
@@ -52,6 +53,7 @@ export function CreatorPage() {
   const [loadingText, setLoadingText] = useState('Rendering...')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [removingBg, setRemovingBg] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const msgRef = useRef(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -141,8 +143,7 @@ export function CreatorPage() {
     return (
       <div className="grid-bg scanlines corner-glow min-h-screen flex items-center justify-center px-6">
         <motion.div
-          className="max-w-md w-full text-center p-10"
-          className='retro-card' style={{ background: 'var(--color-surface)' }}
+          className="retro-card max-w-md w-full text-center p-10" style={{ background: 'var(--color-surface)' }}
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <p className="font-mono text-xs tracking-widest mb-3" style={{ color: '#dc2626' }}>// ACCESS RESTRICTED</p>
           <h2 className="font-display text-5xl tracking-widest mb-4">SIGN IN<span style={{ color: '#dc2626' }}>.</span></h2>

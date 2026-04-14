@@ -62,3 +62,36 @@ export const COLOR_OPTIONS: ColorOption[] = [
 ]
 
 export const QUICK_TAGS = ['cosmic', 'retro', 'sparkles', 'chill', 'bold', 'stars', 'coffee', 'waves']
+
+export const INSPIRE_PROMPTS = [
+  'a tiny demon riding a skateboard, wearing headphones',
+  'a sleepy astronaut floating in space eating ramen',
+  'an old TV set with a face watching itself',
+  'a frog in a leather jacket with sunglasses',
+  'a melting ice cream cone crying a single tear',
+  'a grinning skull wearing a flower crown',
+  'a retro robot holding a birthday cake',
+  'a cat in a spacesuit floating past the moon',
+  'a happy sun with sharp teeth and sunglasses',
+  'a ramen bowl with eyes and arms flexing',
+  'a tiny dragon hoarding a pile of tacos',
+  'an alien tourist taking photos of Earth from orbit',
+  'a wise old mushroom wearing a wizard hat',
+  'a bear in a trench coat giving a thumbs up',
+  'a neon ghost holding a coffee cup',
+  'a vintage cassette tape with arms and legs',
+  'a shark in business casual attire',
+  'a raccoon breaking into a vending machine',
+  'an avocado lifting weights at the gym',
+  'a spooky haunted house with a smiley face',
+  'a cloud raining dollar bills with sunglasses',
+  'a retro joystick flexing with muscle arms',
+  'a hot dog surfing a wave at the beach',
+  'a skeleton DJ spinning records at midnight',
+  'a corgi pilot in a vintage biplane',
+  'a crescent moon wearing a sleep mask',
+  'a tiger in neon sneakers doing a kickflip',
+  'a brain with googly eyes reading a tiny book',
+  'a pineapple wearing a crown and looking regal',
+  'a flame with sunglasses breakdancing',
+]

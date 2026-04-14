@@ -45,7 +45,7 @@ export function GalleryPage() {
 
   if (!user) return (
     <div className="min-h-screen grid-bg scanlines flex items-center justify-center">
-      <motion.div className="text-center max-w-sm p-8" className='retro-card' style={{ background: 'var(--color-surface)' }}
+      <motion.div className="retro-card text-center max-w-sm p-8" style={{ background: 'var(--color-surface)' }}
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <p className="font-mono text-xs tracking-widest mb-3" style={{ color: '#dc2626' }}>// AUTH REQUIRED</p>
         <h2 className="font-display text-4xl tracking-widest mb-4">ACCESS DENIED</h2>

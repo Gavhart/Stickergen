@@ -41,7 +41,7 @@ export function LandingPage() {
   useEffect(() => {
     const glitch = () => {
       const el = h1Ref.current
-      if (\!el) return
+      if (!el) return
       el.classList.add('glitching')
       setTimeout(() => el.classList.remove('glitching'), 380)
       setTimeout(glitch, 4000 + Math.random() * 5000)
@@ -103,7 +103,7 @@ export function LandingPage() {
                   {line}
                 </div>
               ))}
-              {\!bootDone && (
+              {!bootDone && (
                 <span
                   className="font-mono"
                   style={{ fontSize: '0.62rem', color: '#dc2626', animation: 'blink 0.9s step-end infinite' }}
