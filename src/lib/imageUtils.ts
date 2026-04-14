@@ -14,7 +14,7 @@ export async function removeWhiteBackground(
       canvas.width = img.width
       canvas.height = img.height
       const ctx = canvas.getContext('2d', { willReadFrequently: true })
-      if (\!ctx) { reject(new Error('Canvas not supported')); return }
+      if (!ctx) { reject(new Error('Canvas not supported')); return }
 
       ctx.drawImage(img, 0, 0)
       const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height)
@@ -50,7 +50,6 @@ export async function removeWhiteBackground(
       }
 
       ctx.putImageData(new ImageData(data, width, height), 0, 0)
-      // Export as PNG to preserve transparency
       resolve(canvas.toDataURL('image/png').split(',')[1])
     }
     img.onerror = () => reject(new Error('Failed to load image'))

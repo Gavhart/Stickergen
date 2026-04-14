@@ -121,6 +121,29 @@ export function CreatorPage() {
     showToast('FILE SAVED')
   }
 
+  const downloadTransparent = async () => {
+    if (!imageData || removingBg) return
+    setRemovingBg(true)
+    try {
+      const transparentB64 = await removeWhiteBackground(imageData)
+      const a = document.createElement('a')
+      a.href = `data:image/png;base64,${transparentB64}`
+      a.download = `sticker_${prompt.replace(/[^a-z0-9]/gi, '_').slice(0, 30)}_transparent.png`
+      a.click()
+      showToast('TRANSPARENT PNG SAVED')
+    } catch {
+      showToast('ERR: BG REMOVAL FAILED')
+    } finally {
+      setRemovingBg(false)
+    }
+  }
+
+  const inspire = () => {
+    const pick = INSPIRE_PROMPTS[Math.floor(Math.random() * INSPIRE_PROMPTS.length)]
+    setPrompt(pick)
+    showToast('PROMPT LOADED')
+  }
+
   const archive = async () => {
     if (!imageData) return
     if (!user) { setShowAuth(true); return }
@@ -143,7 +166,8 @@ export function CreatorPage() {
     return (
       <div className="grid-bg scanlines corner-glow min-h-screen flex items-center justify-center px-6">
         <motion.div
-          className="retro-card max-w-md w-full text-center p-10" style={{ background: 'var(--color-surface)' }}
+          className="retro-card max-w-md w-full text-center p-10"
+          style={{ background: 'var(--color-surface)' }}
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <p className="font-mono text-xs tracking-widest mb-3" style={{ color: '#dc2626' }}>// ACCESS RESTRICTED</p>
           <h2 className="font-display text-5xl tracking-widest mb-4">SIGN IN<span style={{ color: '#dc2626' }}>.</span></h2>
@@ -205,7 +229,7 @@ export function CreatorPage() {
               </div>
             </div>
 
-            {/* fal.ai key input — only shown when fal is selected */}
+            {/* fal.ai key input */}
             <AnimatePresence>
               {provider === 'fal' && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
@@ -262,7 +286,7 @@ export function CreatorPage() {
 
                 <div className="relative">
                   <textarea value={prompt} onChange={e => setPrompt(e.target.value)} rows={4}
-                    placeholder={uploadedImage ? 'Describe how to transform this image…' : 'Example: a grinning toaster with sunglasses, thick outlines, lots of personality…'}
+                    placeholder={uploadedImage ? 'Describe how to transform this image...' : 'Example: a grinning toaster with sunglasses, thick outlines, lots of personality...'}
                     className="w-full px-4 pt-3.5 pb-12 font-body font-semibold text-base outline-none resize-y transition-all leading-relaxed rounded-xl border-2"
                     style={{ background: '#fff', borderColor: 'rgba(167,243,208,0.65)', color: 'var(--color-ink)' }}
                     onFocus={e => { e.currentTarget.style.borderColor = 'rgba(52,211,153,0.65)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(52,211,153,0.15)' }}
@@ -281,6 +305,16 @@ export function CreatorPage() {
                         </button>
                       ))}
                     </div>
+                    <button type="button"
+                      onClick={inspire}
+                      title="Random prompt inspiration"
+                      className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full font-mono text-[11px] uppercase tracking-wide border transition-all shadow-sm"
+                      style={{ background: 'linear-gradient(180deg,#fff,rgba(254,243,199,0.9))', borderColor: 'rgba(251,191,36,0.35)', color: 'var(--color-muted)' }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(251,191,36,0.7)'; e.currentTarget.style.color = '#d97706' }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(251,191,36,0.35)'; e.currentTarget.style.color = 'var(--color-muted)' }}>
+                      <Dice5 size={12} />
+                      INSPIRE
+                    </button>
                     <button type="button"
                       onClick={() => { if (provider !== 'gemini') { setProvider('gemini'); showToast('IMAGE MODE: SWITCHED TO GEMINI') } fileInputRef.current?.click() }}
                       title="Upload reference image"
@@ -326,10 +360,8 @@ export function CreatorPage() {
 
             {/* Generate */}
             <motion.button onClick={generate} disabled={loading} whileTap={{ scale: 0.98 }}
-              className="w-full py-5 font-display text-2xl tracking-widest uppercase transition-all"
-              style={{ background: loading ? 'var(--color-disabled)' : '#dc2626', color: loading ? 'var(--color-disabled-text)' : 'white', cursor: loading ? 'not-allowed' : 'pointer' }}
-              onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#b91c1c' }}
-              onMouseLeave={e => { if (!loading) e.currentTarget.style.background = '#dc2626' }}>
+              className="w-full py-5 font-display text-2xl tracking-widest uppercase btn-retro"
+              style={{ background: loading ? 'var(--color-disabled)' : '#dc2626', color: loading ? 'var(--color-disabled-text)' : 'white', cursor: loading ? 'not-allowed' : 'pointer', border: '1px solid', borderColor: loading ? 'transparent' : '#b91c1c', boxShadow: loading ? 'none' : '3px 3px 0 rgba(0,0,0,0.2)' }}>
               {loading ? 'PROCESSING...' : uploadedImage ? 'TRANSFORM IMAGE' : 'GENERATE STICKER'}
             </motion.button>
           </motion.div>
@@ -338,13 +370,21 @@ export function CreatorPage() {
           <motion.div className="flex flex-col items-center gap-4" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}>
             <StickerDisplay imageData={imageData} loading={loading} loadingText={loadingText} />
 
-            <div className="flex gap-2 w-full max-w-sm">
+            <div className="flex gap-2 w-full max-w-sm flex-wrap">
               <button onClick={download} disabled={!imageData}
                 className="flex-1 flex items-center justify-center gap-2 py-3 font-mono text-xs tracking-widest uppercase transition-all"
                 style={{ border: !imageData ? '1px solid var(--color-border)' : '1px solid rgba(220,38,38,0.4)', color: !imageData ? 'var(--color-muted)' : '#dc2626', background: !imageData ? 'transparent' : 'var(--color-red-dim)', cursor: !imageData ? 'not-allowed' : 'pointer' }}
                 onMouseEnter={e => { if (imageData) e.currentTarget.style.borderColor = '#dc2626' }}
                 onMouseLeave={e => { if (imageData) e.currentTarget.style.borderColor = 'rgba(220,38,38,0.4)' }}>
                 <Download size={13} /> SAVE
+              </button>
+              <button onClick={downloadTransparent} disabled={!imageData || removingBg}
+                title="Download with transparent background"
+                className="flex-1 flex items-center justify-center gap-2 py-3 font-mono text-xs tracking-widest uppercase transition-all"
+                style={{ border: !imageData ? '1px solid var(--color-border)' : '1px solid rgba(99,102,241,0.4)', color: !imageData ? 'var(--color-muted)' : '#6366f1', background: !imageData ? 'transparent' : 'rgba(99,102,241,0.06)', cursor: (!imageData || removingBg) ? 'not-allowed' : 'pointer' }}
+                onMouseEnter={e => { if (imageData) e.currentTarget.style.borderColor = '#6366f1' }}
+                onMouseLeave={e => { if (imageData) e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}>
+                {removingBg ? '...' : <><Download size={13} /> TRANSP</>}
               </button>
               <button onClick={archive} disabled={!imageData || saving}
                 className="flex-1 flex items-center justify-center gap-2 py-3 font-mono text-xs tracking-widest uppercase transition-all"
@@ -355,9 +395,9 @@ export function CreatorPage() {
               </button>
               <button onClick={generate} disabled={!imageData || loading}
                 className="flex items-center justify-center gap-2 px-4 py-3 font-mono text-xs tracking-widest uppercase transition-all"
-                style={{ border: '1px solid var(--color-border)', color: !imageData ? 'var(--color-muted)' : 'var(--color-muted)', cursor: !imageData ? 'not-allowed' : 'pointer' }}
+                style={{ border: '1px solid var(--color-border)', color: !imageData ? 'var(--color-muted)' : 'var(--color-muted2)', cursor: !imageData ? 'not-allowed' : 'pointer' }}
                 onMouseEnter={e => { if (imageData) e.currentTarget.style.color = 'var(--color-ink)' }}
-                onMouseLeave={e => { e.currentTarget.style.color = !imageData ? 'var(--color-muted)' : 'var(--color-muted)' }}>
+                onMouseLeave={e => { e.currentTarget.style.color = !imageData ? 'var(--color-muted)' : 'var(--color-muted2)' }}>
                 <RotateCcw size={13} />
               </button>
             </div>
