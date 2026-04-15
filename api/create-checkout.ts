@@ -15,7 +15,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const origin =
       (req.headers.origin as string | undefined) ||
       process.env.APP_URL ||
-      process.env.VITE_APP_URL ||
       'http://localhost:5173'
 
     const priceId = process.env.STRIPE_PRICE_ID
@@ -24,9 +23,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : [{
           price_data: {
             currency: 'usd',
-            product_data: { name: 'StickerGen Pro' },
+            product_data: { name: 'GavDaddy Recipes Pro' },
             recurring: { interval: 'month' },
-            unit_amount: 999,
+            unit_amount: 499,
           },
           quantity: 1,
         }]
@@ -36,10 +35,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       payment_method_types: ['card'],
       customer_email: email ?? undefined,
       line_items: lineItems,
-      success_url: `${origin}/create?upgraded=1`,
-      cancel_url: `${origin}/create?upgrade_cancelled=1`,
+      success_url: `${origin}/my-recipes?upgraded=1`,
+      cancel_url: `${origin}/pricing`,
       client_reference_id: userId,
-      metadata: { userId, plan: 'pro-monthly-999' },
+      metadata: { userId, plan: 'pro' },
     })
 
     return res.status(200).json({ url: session.url })

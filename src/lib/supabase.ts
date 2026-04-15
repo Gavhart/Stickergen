@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Profile, Sticker } from './types'
+import type { Profile, Recipe } from './types'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
@@ -10,7 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '')
 
-// -- Auth helpers ------------------------------------------------------------
+// -- Auth helpers ----------------------------------------------------------
 export const signUpWithEmail = (email: string, password: string) =>
   supabase.auth.signUp({ email, password })
 
@@ -20,20 +20,15 @@ export const signInWithEmail = (email: string, password: string) =>
 export const signInWithGoogle = () =>
   supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: `${window.location.origin}/create` },
+    options: { redirectTo: `${window.location.origin}/feed` },
   })
 
 export const signOut = () => supabase.auth.signOut()
 
-// -- Profile helpers ---------------------------------------------------------
+// -- Profile helpers -------------------------------------------------------
 export const getProfile = async (userId: string): Promise<Profile | null> => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
-  if (error) return null
-  return data as Profile
+  const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
+  return data as Profile | null
 }
 
 export const upsertProfile = async (profile: Partial<Profile> & { id: string }) => {
@@ -54,50 +49,98 @@ export const uploadAvatar = async (userId: string, file: File) => {
   return { url: data.publicUrl, error: null }
 }
 
-// -- Sticker helpers ---------------------------------------------------------
-export const saveSticker = async (
-  userId: string,
-  base64: string,
-  meta: { prompt: string; style: string; color: string; provider: string }
-) => {
-  // Convert base64 to blob and upload to storage
-  const byteString = atob(base64)
-  const ab = new ArrayBuffer(byteString.length)
-  const ia = new Uint8Array(ab)
-  for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i)
-  const blob = new Blob([ab], { type: 'image/png' })
+// -- Recipe helpers --------------------------------------------------------
 
-  const filename = `${userId}/${Date.now()}.png`
-  const { error: uploadError } = await supabase.storage
-    .from('stickers')
-    .upload(filename, blob, { contentType: 'image/png' })
-  if (uploadError) return { data: null, error: uploadError }
-
-  const { data: urlData } = supabase.storage.from('stickers').getPublicUrl(filename)
-
-  const { data, error } = await supabase
-    .from('stickers')
-    .insert({ user_id: userId, image_url: urlData.publicUrl, ...meta })
-    .select()
-    .single()
-  return { data: data as Sticker | null, error }
+/** Fetch community feed (public recipes, newest first, with author info) */
+export const getFeedRecipes = async (limit = 24, offset = 0): Promise<Recipe[]> => {
+  const { data } = await supabase
+    .from('recipes')
+    .select('*, profiles(username, avatar_url)')
+    .eq('is_public', true)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+  return (data ?? []) as Recipe[]
 }
 
-export const getStickers = async (userId: string): Promise<Sticker[]> => {
-  const { data, error } = await supabase
-    .from('stickers')
+/** Fetch all recipes by a user */
+export const getMyRecipes = async (userId: string): Promise<Recipe[]> => {
+  const { data } = await supabase
+    .from('recipes')
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
-  if (error) return []
-  return data as Sticker[]
+  return (data ?? []) as Recipe[]
 }
 
-export const deleteSticker = async (sticker: Sticker) => {
-  // Remove from storage
-  const path = sticker.image_url.split('/stickers/')[1]
-  if (path) await supabase.storage.from('stickers').remove([path])
-  // Remove from DB
-  return supabase.from('stickers').delete().eq('id', sticker.id)
+/** Fetch a single recipe by id */
+export const getRecipe = async (id: string): Promise<Recipe | null> => {
+  const { data } = await supabase
+    .from('recipes')
+    .select('*, profiles(username, avatar_url)')
+    .eq('id', id)
+    .single()
+  return data as Recipe | null
 }
 
+/** Create a new recipe */
+export const createRecipe = async (userId: string, recipe: Omit<Recipe, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'profiles' | 'saves_count' | 'likes_count' | 'is_saved' | 'is_liked'>) => {
+  const { data, error } = await supabase
+    .from('recipes')
+    .insert({ ...recipe, user_id: userId })
+    .select()
+    .single()
+  return { data: data as Recipe | null, error }
+}
+
+/** Update an existing recipe */
+export const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
+  const { data, error } = await supabase
+    .from('recipes')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+  return { data: data as Recipe | null, error }
+}
+
+/** Delete a recipe */
+export const deleteRecipe = async (id: string) =>
+  supabase.from('recipes').delete().eq('id', id)
+
+/** Toggle save (bookmark) on a recipe */
+export const toggleSave = async (userId: string, recipeId: string, saved: boolean) => {
+  if (saved) {
+    return supabase.from('saves').delete().match({ user_id: userId, recipe_id: recipeId })
+  }
+  return supabase.from('saves').insert({ user_id: userId, recipe_id: recipeId })
+}
+
+/** Toggle like on a recipe */
+export const toggleLike = async (userId: string, recipeId: string, liked: boolean) => {
+  if (liked) {
+    return supabase.from('likes').delete().match({ user_id: userId, recipe_id: recipeId })
+  }
+  return supabase.from('likes').insert({ user_id: userId, recipe_id: recipeId })
+}
+
+/** Get saved recipe ids for a user */
+export const getSavedIds = async (userId: string): Promise<string[]> => {
+  const { data } = await supabase.from('saves').select('recipe_id').eq('user_id', userId)
+  return (data ?? []).map((r: { recipe_id: string }) => r.recipe_id)
+}
+
+/** Get liked recipe ids for a user */
+export const getLikedIds = async (userId: string): Promise<string[]> => {
+  const { data } = await supabase.from('likes').select('recipe_id').eq('user_id', userId)
+  return (data ?? []).map((r: { recipe_id: string }) => r.recipe_id)
+}
+
+/** Fetch saved recipes for a user */
+export const getSavedRecipes = async (userId: string): Promise<Recipe[]> => {
+  const { data } = await supabase
+    .from('saves')
+    .select('recipe_id, recipes(*, profiles(username, avatar_url))')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+  return (data ?? []).map((r: { recipes: unknown }) => r.recipes as Recipe)
+}

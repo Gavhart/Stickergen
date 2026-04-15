@@ -5,17 +5,21 @@
   --color-surface: #ffffff;
   --color-surface2: #f3efe8;
   --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-strong: rgba(0, 0, 0, 0.18);
+  --color-border-strong: rgba(0, 0, 0, 0.16);
   --color-border-input: rgba(0, 0, 0, 0.1);
-  --color-red: #dc2626;
-  --color-red-dim: rgba(220, 38, 38, 0.1);
-  --color-red-glow: rgba(220, 38, 38, 0.28);
+  --color-red: #b91c1c;
+  --color-red-dim: rgba(185, 28, 28, 0.1);
+  --color-red-glow: rgba(185, 28, 28, 0.28);
+  --color-amber: #b45309;
+  --color-amber-dim: rgba(180, 83, 9, 0.1);
+  --color-amber-glow: rgba(180, 83, 9, 0.22);
+  --color-smoke: #6b6058;
   --color-ink: #1c1917;
   --color-muted: #57534e;
   --color-muted2: #78716c;
   --color-green: #16a34a;
   --color-green-bright: #22c55e;
-  --color-nav-bg: rgba(250, 246, 240, 0.94);
+  --color-nav-bg: rgba(250, 246, 240, 0.95);
   --color-nav-mobile-bg: #faf6f0;
   --color-disabled: #e7e2da;
   --color-disabled-text: #78716c;
@@ -30,7 +34,6 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-
 html { scroll-behavior: smooth; }
 
 body {
@@ -44,49 +47,53 @@ body {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--color-surface2); }
-::-webkit-scrollbar-thumb { background: #c8c2ba; border-radius: 0; }
+::-webkit-scrollbar-thumb { background: #c8b8a8; border-radius: 0; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-red); }
 
-/* Animated grid background */
+/* Parchment/smoke grid */
 .grid-bg::before {
   content: '';
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    linear-gradient(rgba(220, 38, 38, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(220, 38, 38, 0.07) 1px, transparent 1px);
-  background-size: 48px 48px;
-  animation: gridDrift 20s linear infinite;
+    linear-gradient(rgba(180, 83, 9, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 83, 9, 0.05) 1px, transparent 1px);
+  background-size: 52px 52px;
+  animation: gridDrift 24s linear infinite;
 }
 @keyframes gridDrift {
   from { background-position: 0 0; }
-  to   { background-position: 48px 48px; }
+  to   { background-position: 52px 52px; }
 }
 
-/* CRT scanlines overlay */
+/* Subtle smoke scanlines */
 .scanlines::after {
   content: '';
   position: fixed; inset: 0; z-index: 1; pointer-events: none;
   background: repeating-linear-gradient(
-    0deg, transparent, transparent 2px,
-    rgba(220, 38, 38, 0.025) 2px, rgba(220, 38, 38, 0.025) 3px
+    0deg, transparent, transparent 3px,
+    rgba(107, 96, 88, 0.015) 3px, rgba(107, 96, 88, 0.015) 4px
   );
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
-/* Red corner glow */
+/* Ember corner glow — amber-to-red */
 .corner-glow::after {
   content: '';
   position: fixed; top: 0; left: 0;
-  width: 500px; height: 500px; z-index: 0; pointer-events: none;
-  background: radial-gradient(circle at top left, rgba(220, 38, 38, 0.16), transparent 65%);
-  animation: cornerGlow 5s ease-in-out infinite alternate;
+  width: 520px; height: 520px; z-index: 0; pointer-events: none;
+  background: radial-gradient(circle at top left,
+    rgba(180, 83, 9, 0.18) 0%,
+    rgba(185, 28, 28, 0.10) 40%,
+    transparent 70%
+  );
+  animation: cornerGlow 6s ease-in-out infinite alternate;
 }
 @keyframes cornerGlow {
   from { opacity: 0.5; transform: scale(1); }
-  to   { opacity: 1;   transform: scale(1.15); }
+  to   { opacity: 1;   transform: scale(1.12); }
 }
 
-/* Retro bracket corners for cards */
+/* Retro bracket corners */
 .retro-card {
   position: relative;
   background: var(--color-surface);
@@ -97,34 +104,21 @@ body {
   content: '';
   position: absolute;
   width: 10px; height: 10px;
-  border-color: #dc2626;
+  border-color: #b45309;
   border-style: solid;
 }
-.retro-card::before {
-  top: -1px; left: -1px;
-  border-width: 2px 0 0 2px;
-}
-.retro-card::after {
-  bottom: -1px; right: -1px;
-  border-width: 0 2px 2px 0;
+.retro-card::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.retro-card::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+/* Smoke card variant — darker border */
+.smoke-card {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid rgba(107, 96, 88, 0.25);
+  box-shadow: 2px 2px 0 rgba(107, 96, 88, 0.08);
 }
 
-/* Terminal prompt label */
-.terminal-label::before {
-  content: '> ';
-  color: #dc2626;
-  font-family: var(--font-mono);
-}
-
-/* Blinking cursor */
-.cursor-blink::after {
-  content: '_';
-  animation: blink 1s step-end infinite;
-  color: #dc2626;
-  margin-left: 2px;
-}
-
-/* Retro button base */
+/* Buttons */
 .btn-retro {
   position: relative;
   font-family: var(--font-ui);
@@ -137,41 +131,46 @@ body {
 .btn-retro::before {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 100%);
   pointer-events: none;
 }
 .btn-retro-primary {
-  background: #dc2626;
+  background: #b91c1c;
   color: white;
-  border: 1px solid #b91c1c;
-  box-shadow: 3px 3px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+  border: 1px solid #991b1b;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.22);
 }
 .btn-retro-primary:hover {
-  background: #b91c1c;
-  box-shadow: 1px 1px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+  background: #991b1b;
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.22);
+  transform: translate(2px, 2px);
+}
+.btn-retro-amber {
+  background: #b45309;
+  color: white;
+  border: 1px solid #92400e;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.22);
+}
+.btn-retro-amber:hover {
+  background: #92400e;
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.22);
   transform: translate(2px, 2px);
 }
 .btn-retro-ghost {
   background: transparent;
   color: var(--color-muted2);
   border: 1px solid var(--color-border-strong);
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.07);
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.06);
 }
 .btn-retro-ghost:hover {
-  border-color: #dc2626;
+  border-color: #b45309;
   color: var(--color-ink);
-  box-shadow: 1px 1px 0 rgba(0,0,0,0.07);
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.06);
   transform: translate(1px, 1px);
 }
 
-/* Sweep line animation */
-@keyframes sweepDown {
-  0%   { top: -2px; opacity: 0.9; }
-  85%  { opacity: 0.5; }
-  100% { top: 100vh; opacity: 0; }
-}
-
-/* Glitch keyframes */
+/* Keyframes */
+@keyframes sweepDown { 0% { top:-2px;opacity:.9; } 85%{opacity:.5;} 100%{top:100vh;opacity:0;} }
 @keyframes glitchA {
   0%  { clip-path:inset(5% 0 85% 0);  transform:translate(-6px,0); }
   33% { clip-path:inset(30% 0 55% 0); transform:translate(4px,0); }
@@ -184,16 +183,13 @@ body {
   66% { clip-path:inset(30% 0 55% 0); transform:translate(3px,0); }
   100%{ clip-path:inset(5% 0 80% 0);  transform:translate(-5px,0); opacity:0; }
 }
-
-/* Bar loader */
 @keyframes barPulse {
   0%,100%{ opacity:.3; transform:scaleY(.5); }
-  50%    { opacity:1;  transform:scaleY(1); box-shadow:0 0 8px #dc2626; }
+  50%    { opacity:1;  transform:scaleY(1); box-shadow:0 0 8px #b45309; }
 }
 @keyframes blink { 50% { opacity: 0; } }
 @keyframes dotBlink { 0%,100%{opacity:1} 50%{opacity:0} }
 @keyframes spin { to { transform: rotate(360deg); } }
-
 @keyframes stickerReveal {
   0%  { filter:brightness(4) saturate(0) contrast(2); transform:scale(1.06) skewX(-3deg); opacity:.3; }
   25% { filter:brightness(.3) saturate(3); transform:scale(.97) skewX(2deg); opacity:.8; }
@@ -201,24 +197,14 @@ body {
   75% { filter:brightness(.8) saturate(1.2); transform:scale(.99); opacity:1; }
   100%{ filter:none; transform:none; opacity:1; }
 }
-
 @keyframes itemEntrance {
   from { opacity:0; transform:translateY(20px) scale(.93); }
   to   { opacity:1; transform:translateY(0) scale(1); }
 }
-
 @keyframes fadeUp {
   from { opacity:0; transform:translateY(24px); }
   to   { opacity:1; transform:translateY(0); }
 }
-
-@keyframes lineGrow { to { width: 24px; } }
-
-@keyframes topBarSlide {
-  from { transform:scaleX(0); transform-origin:left; }
-  to   { transform:scaleX(1); transform-origin:left; }
-}
-
 @keyframes bootIn {
   0%   { opacity: 0; letter-spacing: 0.5em; }
   60%  { opacity: 1; letter-spacing: 0.18em; }
